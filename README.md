@@ -10,3 +10,9 @@ fts-linux-server
 ├── ngrok.service
 └── pyproject.toml
 ```
+
+# 使い方
+```bash
+git clone https://github.com/yukimasaki/fts-linux-server.git
+sudo mv fts-linux-server /opt/fts-linux-server
+```
