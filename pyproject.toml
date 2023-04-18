@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "linux-server"
+version = "0.1.0"
+description = ""
+authors = ["John Doe <johndoe@example.com>"]
+packages = [{include = "common", from = "scripts"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

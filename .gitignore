@@ -1,0 +1,4 @@
+__pycache__/
+.env
+/scripts/ngrok/ngrok.log
+/scripts/backup/
