@@ -31,10 +31,68 @@ fts-linux-server
 git clone https://github.com/yukimasaki/fts-linux-server.git
 ```
 
-クローンしたリポジトリを`/opt`に移動します。
+クローンしたリポジトリを`/opt/`に移動します。
 ```bash
 sudo mv fts-linux-server/ /opt/
 ```
+
+一括でパーミッションを変更します。
+```bash
+cd /opt/fts-linux-server
+find ./ -name \*.py | xargs chmod 755
+```
+
+依存関係をインストールします。
+```bash
+source /opt/example/bin/activate
+poetry install
+deactivate
+```
+
+ngrok.serviceを所定のディレクトリに移動します。
+```bash
+sudo mv ngrok.service /usr/lib/systemd/system/
+```
+
+メール通知設定をします。
+ログイン情報などは`.env`ファイルに記述します。
+```bash
+nano .env
+```
+
+下記の通り変更します。  
+`CUSTOMER`の内容はメール件名に表示されます。  
+例: `[hogehoge] ngrokの常駐が開始しました`
+```.env
+CUSTOMER=hogehoge
+FROM_EMAIL=from@example.com
+TO_EMAIL=to@example.com
+EMAIL_USER=from@example.com
+EMAIL_PASSWORD=fugafuga
+SMTP_SERVER=smtp.example.com
+```
+
+ngrokのサービスを有効化(デーモン化)します。
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start ngrok.service
+```
+
+エラーが出ていないか確認します。
+```bash
+sudo systemctl status ngrok.service
+# Active: active (running)
+```
+
+サービスを永続化します。
+```bash
+sudo systemctl enable ngrok.service
+```
+
+サービスが起動すると`TO_EMAIL`で指定したメールアドレスに通知が届きます。
+通知メールには以下の情報が記載されています。
+- 接続用アドレス
+- 接続用ポート番号
 
 # 仮想環境を構築する
 Python3とPoetryをインストールします。  
