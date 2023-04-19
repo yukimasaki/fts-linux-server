@@ -1,4 +1,4 @@
-#!/opt/sh/bin/python3
+#!/opt/example/bin/python3
 # このスクリプトはngrok起動用スクリプトに先駆けて非同期的に起動し、
 # ngrokのサービス開始=ログファイルの変更を監視する。
 

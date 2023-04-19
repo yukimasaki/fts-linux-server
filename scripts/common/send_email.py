@@ -1,4 +1,4 @@
-#!/opt/sh/bin/python3
+#!/opt/example/bin/python3
 from dotenv import load_dotenv
 import os
 

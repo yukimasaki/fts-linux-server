@@ -1,4 +1,4 @@
-#!/opt/sh/bin/python3
+#!/opt/example/bin/python3
 import os
 import pathlib
 import subprocess
