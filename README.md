@@ -23,8 +23,9 @@ fts-linux-server
 - `pyproject.toml` Poetryによる自作モジュールの管理に必要なファイルです。
 
 # 使い方
-スクリプトの実行にはPoetryが必要です。
-インストールがまだの場合は[仮想環境を構築する](#仮想環境を構築する)を参照してください。
+- スクリプトの実行にはPoetryが必要です。
+- インストールがまだの場合は[仮想環境を構築する](#仮想環境を構築する)を参照してください。
+- ngrokがインストールされていない場合は[ngrokをインストールする](#ngrokをインストールする)を参照してください。
 
 ユーザーディレクトリで`git clone`します。
 ```bash
@@ -138,4 +139,21 @@ source /opt/example/bin/activate
 Poetryをインストールします。
 ```bash
 pip install poetry
+```
+
+# ngrokをインストールする
+[公式サイト](https://ngrok.com)でユーザー登録をします。
+
+実行ファイルをダウンロードします。
+```bash
+wget https://bin.equinox.io/c/XXXXXX/ngrok-v3-stable-linux-amd64.tgz
+```
+
+圧縮ファイルを解凍します。
+```bash
+tar zxf ngrok-v3-stable-linux-amd64.tgz
+```
+
+実行ファイルのパスを通します。
+```sudo mv ngrok /usr/local/bin
 ```
