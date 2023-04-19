@@ -155,5 +155,6 @@ tar zxf ngrok-v3-stable-linux-amd64.tgz
 ```
 
 実行ファイルのパスを通します。
-```sudo mv ngrok /usr/local/bin
+```bash
+sudo mv ngrok /usr/local/bin
 ```
