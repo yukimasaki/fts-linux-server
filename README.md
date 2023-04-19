@@ -109,6 +109,11 @@ sudo apt install -y python3-venv
 sudo python3 -m venv example
 ```
 
+作成した仮想環境の所有権を変更します。
+```bash
+sudo chown -R $USER:$USER example/
+```
+
 仮想環境の構築が完了しました。  
 実行パスは`/opt/example/bin/python3`となります。  
 
