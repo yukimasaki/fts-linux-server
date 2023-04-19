@@ -1,7 +1,11 @@
 #!/opt/example/bin/python3
+from dotenv import load_dotenv
 import os
 import pathlib
 import subprocess
+
+# .envファイルの内容を読み込む
+load_dotenv()
 
 log_path = f'/opt/fts-linux-server/scripts/ngrok/ngrok.log'
 
@@ -21,6 +25,8 @@ cmd = f'/opt/fts-linux-server/scripts/ngrok/observer.py'
 subprocess.Popen(cmd.split())
 
 # ngrokを起動時にアクセス用アドレス等をログファイルに出力する
+port = os.environ['NGROK_PORT']
 config_path = '/root/.config/ngrok/ngrok.yml'
-cmd = f'ngrok tcp 22 --log={log_path} --config={config_path}'
+
+cmd = f'ngrok tcp {port} --log={log_path} --config={config_path}'
 subprocess.run(cmd.split())
