@@ -35,9 +35,8 @@ try:
             {today_dir}
             '''
         subprocess.run(cmd.split())
+        print('バックアップが正常に終了しました')
     else:
-        raise Exception
-except Exception as e:
-    print('エラー:', e.args)
-
-# バックアップ成功・失敗をメール通知
+        print('既にバックアップが存在します')
+except Exception as ex:
+    print('予期しないエラーによりバックアップが中断しました', format(ex))
