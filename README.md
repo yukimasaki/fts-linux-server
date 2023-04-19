@@ -33,7 +33,7 @@ git clone https://github.com/yukimasaki/fts-linux-server.git
 
 クローンしたリポジトリを`/opt`に移動します。
 ```bash
-sudo mv fts-linux-server /opt/fts-linux-server
+sudo mv fts-linux-server/ /opt/
 ```
 
 # 仮想環境を構築する
