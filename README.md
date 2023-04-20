@@ -158,3 +158,8 @@ tar zxf ngrok-v3-stable-linux-amd64.tgz
 ```bash
 sudo mv ngrok /usr/local/bin
 ```
+
+AuthTokenを登録します。
+```bash
+ngrok config add-authtoken XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
