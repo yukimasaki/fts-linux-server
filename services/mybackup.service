@@ -1,0 +1,13 @@
+[Unit]
+Description=Daily system backup
+After=network.target
+ConditionPathExists=/opt/fts-linux-server/scripts/backup/
+
+[Service]
+ExecStart=/opt/fts-linux-server/scripts/backup/scheduler.py
+Restart=no
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
