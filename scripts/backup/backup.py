@@ -20,6 +20,9 @@ def main():
         raw_yesterday = raw_today - datetime.timedelta(days=1)
         yesterday = raw_yesterday.strftime('%Y-%m-%d')
 
+        # バックアップ元を指定
+        backup_source_path = '/'
+        
         # バックアップ先を指定
         backup_destination_path = '/mnt/storage/backup'
 
@@ -39,7 +42,7 @@ def main():
                 sudo rsync -a -ADHRSX -vi --delete --force --stats --delete-excluded \
                 --exclude-from=exclude.list \
                 --link-dest={yesterday_dir} \
-                / \
+                {backup_source_path} \
                 {today_dir}
                 '''
             subprocess.run(cmd.split())
