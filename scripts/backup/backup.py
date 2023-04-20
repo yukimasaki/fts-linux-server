@@ -12,6 +12,19 @@ def main():
     to_email = os.environ['TO_EMAIL']
 
     try:
+        # バックアップ元を指定
+        backup_source_path = '/'
+        
+        # バックアップ先を指定
+        backup_destination_path = '/mnt/storage/backup'
+
+        # バックアップを保存する上限の日数
+        max_backup_saved = 7
+
+        # 除外リストを指定
+        exclude_list = f'{os.path.dirname(__file__)}/exclude.list'
+        print(exclude_list)
+
         # 今日の日付を取得
         raw_today = datetime.datetime.now()
         today = raw_today.strftime('%Y-%m-%d')
@@ -19,12 +32,6 @@ def main():
         # 昨日の日付を取得
         raw_yesterday = raw_today - datetime.timedelta(days=1)
         yesterday = raw_yesterday.strftime('%Y-%m-%d')
-
-        # バックアップ元を指定
-        backup_source_path = '/'
-        
-        # バックアップ先を指定
-        backup_destination_path = '/mnt/storage/backup'
 
         # バックアップ先が存在しない場合、フォルダを作成する
         is_exist = os.path.isdir(backup_destination_path)
@@ -40,13 +47,16 @@ def main():
             os.makedirs(today_dir)
             cmd = f'''
                 sudo rsync -a -ADHRSX -vi --delete --force --stats --delete-excluded \
-                --exclude-from=exclude.list \
+                --exclude-from={exclude_list} \
                 --link-dest={yesterday_dir} \
                 {backup_source_path} \
                 {today_dir}
                 '''
             subprocess.run(cmd.split())
-            result = {'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': ''}
+            d = remove_old_backups(max_backup_saved, backup_destination_path)
+            deleted_dirs = '\n'.join(d)
+            body = f'\n以下のフォルダが削除されました。\n{deleted_dirs}'
+            result = {'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': body}
         else:
             result = {'status': '中断', 'subject': 'バックアップは既に存在します', 'body': ''}
     except Exception as ex:
@@ -56,3 +66,22 @@ def main():
         message = f'ステータス: {result["status"]}\n結果: {result["subject"]}\nメッセージ: {result["body"]}'
         mime = send_email.create_mime_text(from_email, to_email, message, subject)
         send_email.send_email(mime)
+
+def remove_old_backups(max_backup_saved, backup_destination_path):
+    dirs = []
+    for f in os.listdir(backup_destination_path):
+        if os.path.isdir(os.path.join(backup_destination_path, f)):
+            dirs.append(f)
+
+    if len(dirs) > max_backup_saved:
+        dirs.sort(reverse=True)
+        dirs_to_remove = dirs[max_backup_saved:]
+        for dir_name in dirs_to_remove:
+            dir_path = os.path.join(backup_destination_path, dir_name)
+            if os.path.isdir(dir_path):
+                # shutil.rmtreeだと権限が足りず削除できないディレクトリがあったのでsubprocessでrm -rfを実行している
+                cmd = f'sudo rm -rf {dir_path}'
+                subprocess.run(cmd.split())
+        return dirs_to_remove
+
+    return dirs_to_remove
