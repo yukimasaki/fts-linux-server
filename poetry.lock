@@ -15,7 +15,19 @@ files = [
 [package.extras]
 cli = ["click (>=5.0)"]
 
+[[package]]
+name = "schedule"
+version = "1.2.0"
+description = "Job scheduling for humans."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "schedule-1.2.0-py2.py3-none-any.whl", hash = "sha256:415908febaba0bc9a7c727a32efb407d646fe994367ef9157d123aabbe539ea8"},
+    {file = "schedule-1.2.0.tar.gz", hash = "sha256:b4ad697aafba7184c9eb6a1e2ebc41f781547242acde8ceae9a0a25b04c0922d"},
+]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "4806fff4a82987a1576427edad36aa2c148127cbda592ed54d007aae3e518a61"
+content-hash = "535bb7ac8d85c3b45e4ef47a8f04804a0089f06619788fb1a7373e059be1f715"
