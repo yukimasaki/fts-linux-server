@@ -14,7 +14,7 @@ try:
     restore_destination_path = '/'
 
     # リストア元を指定
-    restore_source_path = '/mnt/storage/backup/snapshot_20230421'
+    restore_source_path = '/mnt/storage/backup/snapshot_2023-04-21'
 
     # 除外リストを指定
     exclude_list = f'{os.path.dirname(__file__)}/exclude.list'
