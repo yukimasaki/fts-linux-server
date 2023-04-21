@@ -63,7 +63,7 @@ def main():
         result = {'status': '失敗', 'subject': f'予期しないエラーによりバックアップが失敗しました', 'body': ex}
     finally:
         subject = f'[{customer}][{result["status"]}]{result["subject"]}'
-        message = f'ステータス: {result["status"]}\n結果: {result["subject"]}\nメッセージ: {result["body"]}'
+        message = f'ステータス: {result["status"]}\n結果: {result["subject"]}\n{result["body"]}'
         mime = send_email.create_mime_text(from_email, to_email, message, subject)
         send_email.send_email(mime)
 
