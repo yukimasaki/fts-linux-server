@@ -2,6 +2,7 @@
 import datetime
 import os
 import subprocess
+import pathlib
 from dotenv import load_dotenv
 from common import send_email
 
@@ -12,76 +13,48 @@ def main():
     to_email = os.environ['TO_EMAIL']
 
     try:
-        # バックアップ元を指定
-        backup_source_path = '/'
+        # バックアップ対象の仮想マシン名を配列で指定
+        vms = [
+            'test-ubuntu'
+        ]
         
         # バックアップ先を指定
         backup_destination_path = '/mnt/storage/backup'
 
-        # バックアップを保存する上限の日数
-        max_backup_saved = 7
-
-        # 除外リストを指定
-        exclude_list = f'{os.path.dirname(__file__)}/exclude.list'
-        print(exclude_list)
-
-        # 今日の日付を取得
-        raw_today = datetime.datetime.now()
-        today = raw_today.strftime('%Y-%m-%d')
-
-        # 昨日の日付を取得
-        raw_yesterday = raw_today - datetime.timedelta(days=1)
-        yesterday = raw_yesterday.strftime('%Y-%m-%d')
-
-        # バックアップ先が存在しない場合、フォルダを作成する
-        is_exist = os.path.isdir(backup_destination_path)
-        if not is_exist:
+        # 存在しない場合は作成しておく
+        if os.path.isdir(backup_destination_path):
             os.makedirs(backup_destination_path)
 
-        # 日付毎のフォルダが存在しない場合、フォルダを作成しバックアップを実行する
-        today_dir = f'{backup_destination_path}/snapshot_{today}'
-        yesterday_dir = f'{backup_destination_path}/snapshot_{yesterday}'
+        # バックアップ保持数
+        max_backup = 7
 
-        is_exist = os.path.isdir(today_dir)
-        if not is_exist:
-            os.makedirs(today_dir)
-            cmd = f'''
-                sudo rsync -a -ADHRSX -vi --delete --force --stats --delete-excluded \
-                --exclude-from={exclude_list} \
-                --link-dest={yesterday_dir} \
-                {backup_source_path} \
-                {today_dir}
-                '''
-            subprocess.run(cmd.split())
-            d = remove_old_backups(max_backup_saved, backup_destination_path)
-            deleted_dirs = '\n'.join(d)
-            body = f'\n以下のフォルダが削除されました。\n{deleted_dirs}'
-            result = {'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': body}
-        else:
-            result = {'status': '中断', 'subject': 'バックアップは既に存在します', 'body': ''}
-    except Exception as ex:
-        result = {'status': '失敗', 'subject': f'予期しないエラーによりバックアップが失敗しました', 'body': ex}
-    finally:
-        subject = f'[{customer}][{result["status"]}]{result["subject"]}'
-        message = f'ステータス: {result["status"]}\n結果: {result["subject"]}\n{result["body"]}'
-        mime = send_email.create_mime_text(from_email, to_email, message, subject)
-        send_email.send_email(mime)
+        # 当日の日付を取得
+        now = datetime.datetime.now()
+        today = now.strftime('%Y-%m-%d')
 
-def remove_old_backups(max_backup_saved, backup_destination_path):
-    dirs = []
-    for f in os.listdir(backup_destination_path):
-        if os.path.isdir(os.path.join(backup_destination_path, f)):
-            dirs.append(f)
+        for vm in vms:
+            try:
+                backup_image_path = f'{backup_destination_path}/{vm}_{today}.qcow2'
+                # 当日のバックアップイメージファイルが既に存在する場合は処理を中断
+                if os.path.isdir(backup_image_path):
+                    result = {'status': '中断', 'subject': 'バックアップは既に存在します', 'body': ''}
+                # 存在しない場合は処理を続行
+                else:
+                    # xmlファイルを作成
+                    xml_path = pathlib.Path(f'{backup_destination_path}/{vm}_{today}.xml')
+                    xml_path.touch()
 
-    if len(dirs) > max_backup_saved:
-        dirs.sort(reverse=True)
-        dirs_to_remove = dirs[max_backup_saved:]
-        for dir_name in dirs_to_remove:
-            dir_path = os.path.join(backup_destination_path, dir_name)
-            if os.path.isdir(dir_path):
-                # shutil.rmtreeだと権限が足りず削除できないディレクトリがあったのでsubprocessでrm -rfを実行している
-                cmd = f'sudo rm -rf {dir_path}'
-                subprocess.run(cmd.split())
-        return dirs_to_remove
+                    # バックアップを開始
 
-    return dirs_to_remove
+                    # 進捗を確認
+
+                    # 完了したら処理を終了
+                    result = {'vm': vm, 'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': body}
+            except Exception as ex:
+                result = {'vm': vm, 'status': '失敗', 'subject': f'予期しないエラーによりバックアップが失敗しました', 'body': ex}            
+            finally:
+                subject = f'[{customer}][{result["vm"]}][{result["status"]}]{result["subject"]}'
+                message = f'ステータス: {result["status"]}\n結果: {result["subject"]}\n{result["body"]}'
+
+                mime = send_email.create_mime_text(from_email, to_email, message, subject)
+                send_email.send_email(mime)
