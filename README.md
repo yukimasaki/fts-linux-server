@@ -52,7 +52,7 @@ deactivate
 
 ngrok.serviceを所定のディレクトリに移動します。
 ```bash
-sudo mv ngrok.service /usr/lib/systemd/system/
+sudo mv services/ngrok.service /usr/lib/systemd/system/
 ```
 
 メール通知設定をします。
@@ -65,6 +65,7 @@ nano .env
 `CUSTOMER`の内容はメール件名に表示されます。  
 例: `[hogehoge] ngrokの常駐が開始しました`
 ```.env
+NGROK_PORT=22
 CUSTOMER=hogehoge
 FROM_EMAIL=from@example.com
 TO_EMAIL=to@example.com
