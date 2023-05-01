@@ -25,8 +25,7 @@ cmd = f'/opt/fts-linux-server/scripts/ngrok/observer.py'
 subprocess.Popen(cmd.split())
 
 # ngrokを起動時にアクセス用アドレス等をログファイルに出力する
-port = os.environ['NGROK_PORT']
 config_path = '/root/.config/ngrok/ngrok.yml'
 
-cmd = f'ngrok tcp {port} --log={log_path} --config={config_path}'
+cmd = f'ngrok start cockpit ssh --log={log_path} --config={config_path}'
 subprocess.run(cmd.split())

@@ -22,19 +22,25 @@ with open(log_path, 'r') as f:
     rows = f.read().split('\n')
 
 # ログファイルからアクセス用アドレスを正規表現で抽出する
-regex = 'url=tcp://(.+ngrok\.io):(\d{5})'
+regex_url = 'name=(.+)\saddr=.+\surl=tcp://(.+ngrok\.io):(\d{5})'
+matches = []
 for row in rows:
-    match_object = re.search(regex, row)
+    match_object = re.search(regex_url, row)
     if match_object:
-        ngrok_host = match_object.group(1) # ホスト名
-        ngrok_port = match_object.group(2) # ポート番号
+        ngrok_name = match_object.group(1) # トンネル名
+        ngrok_host = match_object.group(2) # ホスト名
+        ngrok_port = match_object.group(3) # ポート番号
+        matches.append((ngrok_name, ngrok_host, ngrok_port))
 
 # 抽出した情報をメールで通知する
 customer = os.environ['CUSTOMER']
 from_email = os.environ['FROM_EMAIL']
 to_email = os.environ['TO_EMAIL']
 subject = f'[{customer}] ngrokの常駐が開始しました'
-message = f'ngrokの常駐が開始しました。\n\nホスト: {ngrok_host}\nポート番号: {ngrok_port}'
+message = 'ngrokの常駐が開始しました。\n\n'
+
+for ngrok_name, ngrok_host, ngrok_port in matches:
+    message += f'トンネル名：{ngrok_name}\nホスト: {ngrok_host}\nポート番号: {ngrok_port}\n\n'
 
 mime = send_email.create_mime_text(from_email, to_email, message, subject)
 send_email.send_email(mime)
