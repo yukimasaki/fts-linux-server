@@ -59,24 +59,26 @@ def main():
                     if not job_running: break
                     time.sleep(10)
 
-                # 「Job type: Completed」の場合は処理を正常終了し、それ以外の結果の場合は例外をスローする
+                # 「Job type: Completed」の場合は処理を正常終了し、それ以外の結果の場合はジョブを中断し例外をスローする
                 is_completed = f'sudo virsh domjobinfo {vm["name"]} --completed'
                 result = subprocess.run(is_completed.split(), capture_output=True, text=True)
 
                 if 'Job type:         Completed' in result.stdout:
                     result = {'vm': vm["name"], 'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': 'body'}
                 else:
+                    abort_job = f'sudo virsh domjobabort {vm["name"]}'
+                    subprocess.run(abort_job.split())
                     raise Exception
 
         except Exception as ex:
-            result = {'vm': vm["name"], 'status': '失敗', 'subject': f'予期しないエラーによりバックアップが失敗しました', 'body': ex}            
+            result = {'vm': vm["name"], 'status': '失敗', 'subject': f'予期しないエラーによりバックアップが失敗しました', 'body': ex}
             
         finally:
             subject = f'[{customer}][{result["vm"]}][{result["status"]}]{result["subject"]}'
             message = f'ステータス: {result["status"]}\n結果: {result["subject"]}\n{result["body"]}'
 
             # mime = send_email.create_mime_text(from_email, to_email, message, subject)
-            # # send_email.send_email(mime)
+            # send_email.send_email(mime)
             print(result)
 
 def create_backup_xml(vm, backup_destination_path, xml_file_name, backup_image_path):
