@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from common import send_email
 import xml.etree.ElementTree as ET
+import subprocess
 
 def main():
     load_dotenv()
@@ -40,11 +41,13 @@ def main():
             else:
                 # xmlファイルを作成
                 xml_file_name = f'{vm}_{today}.xml'
-                create_backup_xml(backup_destination_path, xml_file_name, backup_image_path)
+                xml_file_path = create_backup_xml(backup_destination_path, xml_file_name, backup_image_path)
 
-                # バックアップを開始                    
+                # バックアップを開始
+                cmd_begin_backup = f'sudo virsh backup-begin {vm} --backupxml {xml_file_path}'
+                subprocess.run(cmd_begin_backup.split())
 
-                # 進捗を確認
+                # 進捗の確認を開始 (バックアップジョブが完了するまで処理を継続する)
 
                 # 完了したら処理を終了
                 result = {'vm': vm, 'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': 'body'}
@@ -88,9 +91,11 @@ def create_backup_xml(backup_destination_path, xml_file_name, backup_image_path)
     indent(domainbackup)
     
     # XMLファイルを作成し内容を書き込む
-    xml_file = os.path.join(backup_destination_path, xml_file_name)
+    xml_file_path = os.path.join(backup_destination_path, xml_file_name)
     tree = ET.ElementTree(domainbackup)
-    tree.write(xml_file)
+    tree.write(xml_file_path)
+
+    return xml_file_path
 
 def indent(elem, level=0):
     # 改行とインデント用の空白文字列を作成する
