@@ -53,14 +53,14 @@ def main():
                 # 「Job type: Unbounded」である間は処理を継続し、それ以外の結果の場合は次の処理へ移行する
                 job_running = True
                 while job_running:
-                    is_working = 'sudo virsh domjobinfo test-ubuntu'
+                    is_working = f'sudo virsh domjobinfo {vm["name"]}'
                     result = subprocess.run(is_working.split(), capture_output=True, text=True)
                     job_running = 'Job type:         Unbounded' in result.stdout                    
                     if not job_running: break
                     time.sleep(10)
 
                 # 「Job type: Completed」の場合は処理を正常終了し、それ以外の結果の場合は例外をスローする
-                is_completed = 'sudo virsh domjobinfo test-ubuntu --completed'
+                is_completed = f'sudo virsh domjobinfo {vm["name"]} --completed'
                 result = subprocess.run(is_completed.split(), capture_output=True, text=True)
 
                 if 'Job type:         Completed' in result.stdout:
