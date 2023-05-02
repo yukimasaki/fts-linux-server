@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from common import send_email
 import xml.etree.ElementTree as ET
+import time
 import subprocess
 
 def main():
@@ -35,8 +36,9 @@ def main():
         try:
             backup_image_path = f'{backup_destination_path}/{vm}_{today}.qcow2'
             # 当日のバックアップイメージファイルが既に存在する場合は処理を中断
-            if os.path.isdir(backup_image_path):
-                result = {'status': '中断', 'subject': 'バックアップは既に存在します', 'body': ''}
+            if os.path.isfile(backup_image_path):
+                result = {'vm': vm, 'status': '中断', 'subject': 'バックアップは既に存在します', 'body': ''}
+                print(result)
             # 存在しない場合は処理を続行
             else:
                 # xmlファイルを作成
@@ -44,21 +46,44 @@ def main():
                 xml_file_path = create_backup_xml(backup_destination_path, xml_file_name, backup_image_path)
 
                 # バックアップを開始
-                cmd_begin_backup = f'sudo virsh backup-begin {vm} --backupxml {xml_file_path}'
-                subprocess.run(cmd_begin_backup.split())
+                begin_backup = f'sudo virsh backup-begin {vm} --backupxml {xml_file_path}'
+                subprocess.run(begin_backup.split())
 
-                # 進捗の確認を開始 (バックアップジョブが完了するまで処理を継続する)
+                # 進捗の確認を開始
+                # 「Job type: Unbounded」である間は処理を継続し、「Job type: None」
+                job_running = True
+                while job_running:
+                    is_working = 'sudo virsh domjobinfo test-ubuntu'
+                    result = subprocess.run(is_working.split(), capture_output=True, text=True)
+                    job_running = 'Job type:         Unbounded' in result.stdout                    
+
+                    if not job_running:
+                        break
+                        
+                    print('Job type:         Unbounded')
+                    time.sleep(10)
+
+                # コード2を実行する
+                is_completed = 'sudo virsh domjobinfo test-ubuntu --completed'
+                result = subprocess.run(is_completed.split(), capture_output=True, text=True)
+
+                if 'Job type:         Completed' in result.stdout:
+                    print('完了')
+                else:
+                    print('エラー')
 
                 # 完了したら処理を終了
                 result = {'vm': vm, 'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': 'body'}
+                print(result)
         except Exception as ex:
             result = {'vm': vm, 'status': '失敗', 'subject': f'予期しないエラーによりバックアップが失敗しました', 'body': ex}            
+            print(result)
         finally:
             subject = f'[{customer}][{result["vm"]}][{result["status"]}]{result["subject"]}'
             message = f'ステータス: {result["status"]}\n結果: {result["subject"]}\n{result["body"]}'
 
             mime = send_email.create_mime_text(from_email, to_email, message, subject)
-            send_email.send_email(mime)
+            # send_email.send_email(mime)
 
 def create_backup_xml(backup_destination_path, xml_file_name, backup_image_path):
     # 親要素「domainbackup」を作成
