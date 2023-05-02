@@ -35,6 +35,15 @@ def main():
 
     for vm in vms:
         try:
+            # 開始を知らせるメールを送信
+            result = {'vm': vm["name"], 'status': '開始', 'subject': 'バックアップを開始しました', 'body': ''}
+            subject = f'[{customer}][{result["vm"]}][{result["status"]}]{result["subject"]}'
+            message = f'ステータス: {result["status"]}\n結果: {result["subject"]}\n{result["body"]}'
+
+            # mime = send_email.create_mime_text(from_email, to_email, message, subject)
+            # send_email.send_email(mime)
+            print(result)
+
             backup_image_path = f'{backup_destination_path}/{vm["name"]}_{today}.qcow2'
             # 当日のバックアップイメージファイルが既に存在する場合は処理を中断
             if os.path.isfile(backup_image_path):
@@ -54,17 +63,17 @@ def main():
                 job_running = True
                 while job_running:
                     is_working = f'sudo virsh domjobinfo {vm["name"]}'
-                    result = subprocess.run(is_working.split(), capture_output=True, text=True)
-                    job_running = 'Job type:         Unbounded' in result.stdout                    
+                    job_result = subprocess.run(is_working.split(), capture_output=True, text=True)
+                    job_running = 'Job type:         Unbounded' in job_result.stdout                    
                     if not job_running: break
                     time.sleep(10)
 
                 # 「Job type: Completed」の場合は処理を正常終了し、それ以外の結果の場合はジョブを中断し例外をスローする
                 is_completed = f'sudo virsh domjobinfo {vm["name"]} --completed'
-                result = subprocess.run(is_completed.split(), capture_output=True, text=True)
+                job_result = subprocess.run(is_completed.split(), capture_output=True, text=True)
 
-                if 'Job type:         Completed' in result.stdout:
-                    result = {'vm': vm["name"], 'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': 'body'}
+                if 'Job type:         Completed' in job_result.stdout:
+                    result = {'vm': vm["name"], 'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': ''}
                 else:
                     abort_job = f'sudo virsh domjobabort {vm["name"]}'
                     subprocess.run(abort_job.split())
