@@ -6,12 +6,20 @@ from common import send_email
 import xml.etree.ElementTree as ET
 import time
 import subprocess
+import re
+
+class LowDiskSpaceError(Exception):
+    pass
 
 def main():
     load_dotenv()
     customer = os.environ['CUSTOMER']
     from_email = os.environ['FROM_EMAIL']
     to_email = os.environ['TO_EMAIL']
+
+    # 当日の日付を取得
+    now = datetime.datetime.now()
+    today = now.strftime('%Y-%m-%d')
 
     # バックアップ対象の仮想マシン名を配列で指定
     vms = [
@@ -20,28 +28,33 @@ def main():
     ]
     
     # バックアップ先を指定
-    backup_destination_path = '/mnt/storage/backup'
+    external_storage = '/mnt/storage'
+    backup_destination_path = f'{external_storage}/backup'
 
     # 存在しない場合は作成しておく
     if not os.path.isdir(backup_destination_path):
         os.makedirs(backup_destination_path)
 
     # バックアップ保持数
-    max_backup = 7
+    max_backup_generations = 7
 
-    # 当日の日付を取得
-    now = datetime.datetime.now()
-    today = now.strftime('%Y-%m-%d')
-
+    # 以下の閾値を超過した場合は容量不足の警告を出す
+    max_backup_space = 0.8 # 80%
+    
     for vm in vms:
         try:
+            # バックアップ先の空き容量を確認
+            used_numeric = available_space(external_storage)
+            if used_numeric > max_backup_space:
+                raise LowDiskSpaceError('ディスク容量不足のため、不要なバックアップを削除してバックアップ保持数を調整してください。')
+            
             # 開始を知らせるメールを送信
             result = {'vm': vm["name"], 'status': '開始', 'subject': 'バックアップを開始しました', 'body': ''}
             subject = f'[{customer}][{result["vm"]}][{result["status"]}]{result["subject"]}'
             message = f'ステータス: {result["status"]}\n結果: {result["subject"]}\n{result["body"]}'
 
-            # mime = send_email.create_mime_text(from_email, to_email, message, subject)
-            # send_email.send_email(mime)
+            mime = send_email.create_mime_text(from_email, to_email, message, subject)
+            send_email.send_email(mime)
             print(result)
 
             backup_image_path = f'{backup_destination_path}/{vm["name"]}_{today}.qcow2'
@@ -79,6 +92,9 @@ def main():
                     subprocess.run(abort_job.split())
                     raise Exception
 
+        except LowDiskSpaceError as lds:
+            result = {'vm': vm["name"], 'status': '失敗', 'subject': f'バックアップ先のディスク容量が不足しています', 'body': lds}
+
         except Exception as ex:
             result = {'vm': vm["name"], 'status': '失敗', 'subject': f'予期しないエラーによりバックアップが失敗しました', 'body': ex}
             
@@ -86,8 +102,8 @@ def main():
             subject = f'[{customer}][{result["vm"]}][{result["status"]}]{result["subject"]}'
             message = f'ステータス: {result["status"]}\n結果: {result["subject"]}\n{result["body"]}'
 
-            # mime = send_email.create_mime_text(from_email, to_email, message, subject)
-            # send_email.send_email(mime)
+            mime = send_email.create_mime_text(from_email, to_email, message, subject)
+            send_email.send_email(mime)
             print(result)
 
 def create_backup_xml(vm, backup_destination_path, xml_file_name, backup_image_path):
@@ -143,6 +159,24 @@ def indent(elem, level=0):
     else:
         if level and (not elem.tail or not elem.tail.strip()):
             elem.tail = newline
+
+def available_space(external_storage):
+    # コマンドを実行して、標準出力を取得する
+    cmd = f'df -h {external_storage}'
+    dir_info = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
+
+    # 標準出力を文字列に変換する
+    output = dir_info.stdout.decode('utf-8')
+
+    # 出力から「Use%」の値を抽出する
+    for line in output.split('\n'):
+        if external_storage in line:
+            used_percentage = line.split()[4]
+            used_numeric = re.sub(r'\D', '', used_percentage)
+            used_numeric = int(used_numeric) * 0.01
+            break
+
+    return used_numeric
 
 # デバッグ時のみmain関数を呼び出す
 # 本番運用時はコメントアウトすること
