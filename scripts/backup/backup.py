@@ -27,13 +27,8 @@ def main():
         {'name': 'test-win', 'disk': 'sda'}
     ]
     
-    # バックアップ先を指定
+    # バックアップ先の外部ストレージを指定
     external_storage = '/mnt/storage'
-    backup_destination_path = f'{external_storage}/backup'
-
-    # 存在しない場合は作成しておく
-    if not os.path.isdir(backup_destination_path):
-        os.makedirs(backup_destination_path)
 
     # バックアップ保持数
     max_backup_generations = 7
@@ -43,6 +38,12 @@ def main():
     
     for vm in vms:
         try:
+            # バックアップ先のディレクトリを指定
+            backup_destination_path = f'{external_storage}/backup/{vm["name"]}'
+            # 存在しない場合は作成する
+            if not os.path.isdir(backup_destination_path):
+                os.makedirs(backup_destination_path)
+
             # バックアップ先の空き容量を確認
             used_numeric = available_space(external_storage)
             if used_numeric > max_backup_space:
@@ -86,6 +87,8 @@ def main():
                 job_result = subprocess.run(is_completed.split(), capture_output=True, text=True)
 
                 if 'Job type:         Completed' in job_result.stdout:
+                    # 古いバックアップを削除する処理を実装する
+
                     result = {'vm': vm["name"], 'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': ''}
                 else:
                     abort_job = f'sudo virsh domjobabort {vm["name"]}'
@@ -138,6 +141,7 @@ def create_backup_xml(vm, backup_destination_path, xml_file_name, backup_image_p
     
     # XMLファイルを作成し内容を書き込む
     xml_file_path = os.path.join(backup_destination_path, xml_file_name)
+    
     tree = ET.ElementTree(domainbackup)
     tree.write(xml_file_path)
 
