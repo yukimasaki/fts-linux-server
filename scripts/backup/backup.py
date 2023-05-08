@@ -87,9 +87,10 @@ def main():
                 job_result = subprocess.run(is_completed.split(), capture_output=True, text=True)
 
                 if is_matched(r'Job type\:\s{1,}Completed', job_result.stdout):
-                    # 古いバックアップを削除する処理を実装する
-
-                    result = {'vm': vm["name"], 'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': ''}
+                    # 古いバックアップを削除する
+                    deleted_files = delete_old_backup(backup_destination_path, max_backup_generations)
+                    body = '\n'.join(deleted_files)
+                    result = {'vm': vm["name"], 'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': f'以下のバックアップを削除しました。\n{body}'}
                 else:
                     abort_job = f'sudo virsh domjobabort {vm["name"]}'
                     subprocess.run(abort_job.split())
@@ -108,12 +109,6 @@ def main():
             mime = send_email.create_mime_text(from_email, to_email, message, subject)
             send_email.send_email(mime)
             print(result)
-
-def is_matched(regex, string):
-    if re.match(regex, string):
-        return True
-    else:
-        return False
 
 def create_backup_xml(vm, backup_destination_path, xml_file_name, backup_image_path):
     # 親要素「domainbackup」を作成
@@ -187,6 +182,33 @@ def available_space(external_storage):
             break
 
     return used_numeric
+
+def is_matched(regex, string):
+    if re.match(regex, string):
+        return True
+    else:
+        return False
+    
+def delete_old_backup(backup_destination_path, max_backup_generations):
+    # xmlファイルを削除する
+    files = os.listdir(backup_destination_path)
+    for file in files:
+        if file.endswith('xml'):
+            os.remove(os.path.join(backup_destination_path, file))
+
+    # バックアップファイルの一覧を取得し、ファイル名を降順でソートする
+    backups = sorted(os.listdir(backup_destination_path), reverse=True)
+
+    # max_backup_generationsよりも古いバックアップファイルを削除する
+    deleted_files = []
+    for i in range(max_backup_generations, len(backups)):
+        f = os.path.join(backup_destination_path, backups[i])
+        deleted_files.append(f)
+
+    for deleted_file in deleted_files:
+        os.remove(deleted_file)
+
+    return sorted(deleted_files)
 
 # デバッグ時のみmain関数を呼び出す
 # 本番運用時はコメントアウトすること
