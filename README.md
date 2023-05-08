@@ -8,24 +8,33 @@ Python: Python 3.10.6
 ```
 fts-linux-server
 ├── scripts
+│   ├── backup
+│   │   ├── backup.py
+│   │   └── scheduler.py
 │   ├── common
 │   │   └── send_email.py
 │   └── ngrok
 │       ├── launch_ngrok.py
 │       └── observer.py
-├── ngrok.service
+├── services
+│   ├── mybackup.service
+│   └── ngrok.service
 └── pyproject.toml
 ```
-- `scripts` ... 種々のPythonスクリプトを配置しています。  
-    - `common` ... 他のファイルから使いまわすためにモジュール化したスクリプトを格納しています。  
-    - `ngrok` ... ngrokの自動起動に関するスクリプトを格納しています。  
-- `ngrok.service` Systemdのユニットファイルです。所定のディレクトリにコピーして使います。
+- `scripts` ... 各種のPythonスクリプトを配置しています。
+    - `backup` ... 自動バックアップスクリプトを格納しています。
+    - `common` ... 他のファイルから使いまわすためにモジュール化したスクリプトを格納しています。
+    - `ngrok` ... ngrokの自動起動に関するスクリプトを格納しています。
+- `services` ... 各種のSystemdユニットファイルを格納しています。所定のディレクトリにコピーして使います。
+    - `mybackup.service` 自動バックアップに使います。
+    - `ngrok.service` ngrokの自動起動に使います。
 - `pyproject.toml` Poetryによる自作モジュールの管理に必要なファイルです。
 
 # 使い方
 - スクリプトの実行にはPoetryが必要です。
-- インストールがまだの場合は[仮想環境を構築する](#仮想環境を構築する)を参照してください。
-- ngrokがインストールされていない場合は[ngrokをインストールする](#ngrokをインストールする)を参照してください。
+- インストールしていない場合は[仮想環境を構築する](#仮想環境を構築する)を参照してください。
+- ngrokをインストールしていない場合は[ngrokをインストールする](#ngrokをインストールする)を参照してください。
+- 自動バックアップの詳細は[自動バックアップ詳細](#自動バックアップ詳細)を参照してください。
 
 ユーザーディレクトリで`git clone`します。
 ```bash
@@ -50,8 +59,9 @@ poetry install
 deactivate
 ```
 
-ngrok.serviceを所定のディレクトリに移動します。
+ユニットファイルを所定のディレクトリに移動します。
 ```bash
+sudo mv services/mybackup.service /usr/lib/systemd/system/
 sudo mv services/ngrok.service /usr/lib/systemd/system/
 ```
 
@@ -61,11 +71,10 @@ sudo mv services/ngrok.service /usr/lib/systemd/system/
 nano .env
 ```
 
-下記の通り変更します。  
+以下の通り変更します。  
 `CUSTOMER`の内容はメール件名に表示されます。  
 例: `[hogehoge] ngrokの常駐が開始しました`
 ```.env
-NGROK_PORT=22
 CUSTOMER=hogehoge
 FROM_EMAIL=from@example.com
 TO_EMAIL=to@example.com
@@ -74,24 +83,42 @@ EMAIL_PASSWORD=fugafuga
 SMTP_SERVER=smtp.example.com
 ```
 
-ngrokのサービスを有効化(デーモン化)します。
+ngrokのコンフィグを必要に応じて編集します。
+以下は、CockpitとSSHの2つのトンネルを作成するための書式です。
+```yaml:/root/.config/ngrok/ngrok.yml
+version: "2"
+authtoken: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+tunnels:
+  cockpit:
+    proto: tcp
+    addr: 9090
+  ssh:
+    proto: tcp
+    addr: 22
+```
+
+サービスを起動します。
 ```bash
 sudo systemctl daemon-reload
+sudo systemctl start mybackup.service
 sudo systemctl start ngrok.service
 ```
 
 エラーが出ていないか確認します。
 ```bash
+sudo systemctl status mybackup.service
 sudo systemctl status ngrok.service
 # Active: active (running)
 ```
 
 サービスを永続化します。
 ```bash
+sudo systemctl enable mybackup.service
 sudo systemctl enable ngrok.service
 ```
 
-サービスが起動すると`TO_EMAIL`で指定したメールアドレスに通知が届きます。
+ngrok.serviceが起動すると`TO_EMAIL`で指定したメールアドレスに通知が届きます。
 通知メールには以下の情報が記載されています。
 - 接続用アドレス
 - 接続用ポート番号
@@ -100,7 +127,7 @@ sudo systemctl enable ngrok.service
 Python3とPoetryをインストールします。  
 Ubuntu Server 22.04には、システムが使用するPythonがデフォルトでインストールされていますが、環境汚染を防ぐため仮想環境を別途準備します。
 
-## Python3のインストール
+## Python3をインストールする
 venvモジュールをインストールします。
 ```bash
 sudo apt install -y python3-venv
@@ -129,7 +156,7 @@ source /opt/example/bin/activate
 deactivate
 ```
 
-## Poetryのインストール
+## Poetryをインストールする
 自作モジュールを管理するためのツールを導入します。
 
 まずは仮想環境に入ります。
@@ -162,5 +189,40 @@ sudo mv ngrok /usr/local/bin
 
 AuthTokenを登録します。
 ```bash
-ngrok config add-authtoken XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+sudo ngrok config add-authtoken XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+# 自動バックアップ詳細
+## 概要
+自動バックアップは以下のファイルで構成されます。
+- services/mybackup.service
+- scripts/backup/scheduler.py
+- scripts/backup/backup.py
+
+## mybackup.service
+所定のディレクトリに配置して使用します。  
+サービス化することで不意のプロセス終了を防ぎます。
+詳細は[使い方](#使い方)を参照してください。
+
+## scheduler.py
+スケジュールを有効化します。
+デフォルトでは毎夜1時にバックアップを実行します。
+
+## backup.py
+メインのスクリプトファイルです。
+バックアップ保存先や保持する世代数などはこのファイルで指定します。
+
+### バックアップ対象の仮想マシンを指定する
+```python
+vms = [
+    {'name': 'vm-ubuntu', 'disk': 'vda'},
+    {'name': 'vm-win', 'disk': 'sda'}
+]
+```
+
+`name`には仮想マシン名を、`disk`には仮想マシンのイメージファイル(*.qcow2)が存在するデバイス名を指定します。
+以下のコマンドで確認できます。
+```bash
+sudo virsh list # 仮想マシン名を確認
+sudo virsh domblklist <vm_name> # デバイス名を確認
 ```
