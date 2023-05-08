@@ -78,7 +78,7 @@ def main():
                 while job_running:
                     is_working = f'sudo virsh domjobinfo {vm["name"]}'
                     job_result = subprocess.run(is_working.split(), capture_output=True, text=True)
-                    job_running = 'Job type:         Unbounded' in job_result.stdout                    
+                    job_running = is_matched(r'Job type\:\s{1,}Unbounded', job_result.stdout)
                     if not job_running: break
                     time.sleep(10)
 
@@ -86,7 +86,7 @@ def main():
                 is_completed = f'sudo virsh domjobinfo {vm["name"]} --completed'
                 job_result = subprocess.run(is_completed.split(), capture_output=True, text=True)
 
-                if 'Job type:         Completed' in job_result.stdout:
+                if is_matched(r'Job type\:\s{1,}Completed', job_result.stdout):
                     # 古いバックアップを削除する処理を実装する
 
                     result = {'vm': vm["name"], 'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': ''}
@@ -108,6 +108,12 @@ def main():
             mime = send_email.create_mime_text(from_email, to_email, message, subject)
             send_email.send_email(mime)
             print(result)
+
+def is_matched(regex, string):
+    if re.match(regex, string):
+        return True
+    else:
+        return False
 
 def create_backup_xml(vm, backup_destination_path, xml_file_name, backup_image_path):
     # 親要素「domainbackup」を作成
