@@ -212,7 +212,7 @@ sudo ngrok config add-authtoken XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 メインのスクリプトファイルです。  
 バックアップ保存先や保持する世代数などはこのファイルで指定します。
 
-## バックアップ対象の仮想マシンを指定する
+### バックアップ対象の仮想マシンを指定する
 ```python
 vms = [
     {'name': 'vm-ubuntu', 'disk': 'vda'},
@@ -227,19 +227,19 @@ sudo virsh list # 仮想マシン名を確認
 sudo virsh domblklist <vm_name> # デバイス名を確認
 ```
 
-## バックアップ先の外部ストレージを指定する
+### バックアップ先の外部ストレージを指定する
 指定したディレクトリ内に`backup/<vm_name>`ディレクトリが作成されます。
 ```python
 external_storage = '/mnt/storage'
 ```
 
-## バックアップ保持数を指定する
+### バックアップ保持数を指定する
 過去3日分のバックアップを保持するには`3`と指定します。
 ```python
 max_backup_generations = 3
 ```
 
-## 容量不足のエラーを出す際の閾値を指定する
+### 容量不足のエラーを出す際の閾値を指定する
 外部ストレージ全体のうち、使用済みサイズが80%を超過した場合に容量不足とする場合は`0.8`と指定します。  
 ```python
 max_backup_space = 0.8
