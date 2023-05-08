@@ -212,4 +212,4 @@ def delete_old_backup(backup_destination_path, max_backup_generations):
 
 # デバッグ時のみmain関数を呼び出す
 # 本番運用時はコメントアウトすること
-main()
+# main()
