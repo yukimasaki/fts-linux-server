@@ -1,0 +1,13 @@
+[Unit]
+Description=Automatically launch ngrok after boot
+After=network.target
+ConditionPathExists=/opt/fts-linux-server/scripts/ngrok/
+
+[Service]
+ExecStart=/opt/fts-linux-server/scripts/ngrok/launch_ngrok.py
+Restart=no
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
