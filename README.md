@@ -254,6 +254,16 @@ max_backup_space = 0.8
 ```
 
 ### 仮想マシンをリストアする
+バックアップしたイメージファイルを所定のディレクトリにコピーします。
+```bash
+sudo mv /mnt/storage/backup/<vm-name>/<vm-name>_yyyy-mm-dd.qcow2 /var/lib/libvirt/images/
+```
+
+所有権を変更します。
+```bash
+sudo chown libvirt-qemu:kvm /var/lib/libvirt/images/<vm-name>_yyyy-mm-dd.qcow2
+```
+
 バックアップしたイメージファイルから仮想マシンを復元するには`VMのインポート`をクリックします。
 ![](images/restore_machines_001.png)
 
