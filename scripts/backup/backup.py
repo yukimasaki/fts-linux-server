@@ -31,7 +31,7 @@ def main():
     external_storage = '/mnt/storage'
 
     # バックアップ保持数
-    max_backup_generations = 7
+    max_backup_generations = 3
 
     # 以下の閾値を超過した場合は容量不足の警告を出す
     max_backup_space = 0.8 # 80%
