@@ -1,0 +1,13 @@
+[Unit]
+Description=Auto notification global IP address
+After=network.target
+ConditionPathExists=/opt/fts-linux-server/scripts/mydns/
+
+[Service]
+ExecStart=/opt/fts-linux-server/scripts/mydns/scheduler.py
+Restart=always
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
