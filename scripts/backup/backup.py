@@ -10,14 +10,10 @@ def main():
     customer = os.environ['CUSTOMER']
     from_email = os.environ['FROM_EMAIL']
     to_email = os.environ['TO_EMAIL']
+    backup_source_path = os.environ['BACKUP_SOURCE_PATH']
+    backup_destination_path = os.environ['BACKUP_DESTINATION_PATH']
 
     try:
-        # バックアップ元を指定
-        backup_source_path = '/'
-        
-        # バックアップ先を指定
-        backup_destination_path = '/mnt/storage/backup'
-
         # バックアップを保存する上限の日数
         max_backup_saved = 7
 
@@ -54,8 +50,11 @@ def main():
                 '''
             subprocess.run(cmd.split())
             d = remove_old_backups(max_backup_saved, backup_destination_path)
-            deleted_dirs = '\n'.join(d)
-            body = f'\n以下のフォルダが削除されました。\n{deleted_dirs}'
+            if d == None:
+                body = f'\n削除されたフォルダはありません。'
+            else:
+                deleted_dirs = '\n'.join(d)
+                body = f'\n以下のフォルダが削除されました。\n{deleted_dirs}'
             result = {'status': '成功', 'subject': 'バックアップが正常に終了しました', 'body': body}
         else:
             result = {'status': '中断', 'subject': 'バックアップは既に存在します', 'body': ''}
@@ -73,7 +72,10 @@ def remove_old_backups(max_backup_saved, backup_destination_path):
         if os.path.isdir(os.path.join(backup_destination_path, f)):
             dirs.append(f)
 
-    if len(dirs) > max_backup_saved:
+    if len(dirs) < max_backup_saved:
+        dirs_to_remove = None
+        return dirs_to_remove
+    else:
         dirs.sort(reverse=True)
         dirs_to_remove = dirs[max_backup_saved:]
         for dir_name in dirs_to_remove:
@@ -84,4 +86,4 @@ def remove_old_backups(max_backup_saved, backup_destination_path):
                 subprocess.run(cmd.split())
         return dirs_to_remove
 
-    return dirs_to_remove
+main()
