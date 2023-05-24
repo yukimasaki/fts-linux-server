@@ -86,4 +86,4 @@ def remove_old_backups(max_backup_saved, backup_destination_path):
                 subprocess.run(cmd.split())
         return dirs_to_remove
 
-main()
+#main()
