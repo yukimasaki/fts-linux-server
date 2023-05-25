@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "linux-server"
+name = "Fts Linux Server Manegement Tools"
 version = "0.1.0"
 description = ""
 authors = ["John Doe <johndoe@example.com>"]
