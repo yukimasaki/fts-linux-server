@@ -12,7 +12,7 @@ from common import send_email
 # .envファイルの内容を読み込む
 load_dotenv()
 
-log_path = f'/opt/fts-linux-server/scripts/ngrok/ngrok.log'
+log_path = f'/opt/fts-lsmt/scripts/ngrok/ngrok.log'
 
 # ５秒待機すればログファイルの書き込みが終わるはず
 time.sleep(5)

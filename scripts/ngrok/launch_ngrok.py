@@ -7,7 +7,7 @@ import subprocess
 # .envファイルの内容を読み込む
 load_dotenv()
 
-log_path = f'/opt/fts-linux-server/scripts/ngrok/ngrok.log'
+log_path = f'/opt/fts-lsmt/scripts/ngrok/ngrok.log'
 
 is_exist = os.path.isfile(log_path)
 if not is_exist:
@@ -21,7 +21,7 @@ else:
     log_file.close()
 
 # ngrok起動用スクリプトに先駆けて、非同期的にログ監視スクリプトを起動しておく
-cmd = f'/opt/fts-linux-server/scripts/ngrok/observer.py'
+cmd = f'/opt/fts-lsmt/scripts/ngrok/observer.py'
 subprocess.Popen(cmd.split())
 
 # ngrokを起動時にアクセス用アドレス等をログファイルに出力する

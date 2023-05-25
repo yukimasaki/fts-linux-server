@@ -6,7 +6,7 @@ Python: Python 3.10.6
 
 # ディレクトリ構成
 ```
-fts-linux-server
+fts-lsmt
 ├── scripts
 │   ├── backup
 │   │   ├── backup.py
@@ -38,17 +38,17 @@ fts-linux-server
 
 ユーザーディレクトリで`git clone`します。
 ```bash
-git clone https://github.com/yukimasaki/fts-linux-server.git
+git clone https://github.com/yukimasaki/fts-lsmt.git
 ```
 
 クローンしたリポジトリを`/opt/`に移動します。
 ```bash
-sudo mv fts-linux-server/ /opt/
+sudo mv fts-lsmt/ /opt/
 ```
 
 一括でパーミッションを変更します。
 ```bash
-cd /opt/fts-linux-server
+cd /opt/fts-lsmt
 find ./ -name \*.py | xargs chmod 755
 ```
 
