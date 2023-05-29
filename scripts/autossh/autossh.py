@@ -3,11 +3,10 @@ from dotenv import load_dotenv
 import os
 import subprocess
 
-autossh_username = os.environ['AUTOSSH_USERNAME']
-autossh_domain = os.environ['AUTOSSH_DOMAIN']
-autossh_remote_port = os.environ['AUTOSSH_REMOTE_PORT']
-autossh_local = os.environ['AUTOSSH_LOCAL']
+load_dotenv()
+autossh_host = os.environ['AUTOSSH_HOST']
 
-cmd = f'autossh -fN {autossh_username}@{autossh_domain} -p 55555 -R {autossh_remote_port}:{autossh_local}'
+
+cmd = f'autossh -fN {autossh_host}'
 
 subprocess.run(cmd.split())
