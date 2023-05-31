@@ -1,0 +1,11 @@
+[Unit]
+Description=Auto launch chisel
+After=network.target
+ConditionPathExists=/opt/fts-lsmt/scripts/chisel/
+
+[Service]
+ExecStart=/opt/fts-lsmt/scripts/chisel/chisel-server.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
