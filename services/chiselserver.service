@@ -5,7 +5,7 @@ ConditionPathExists=/opt/fts-lsmt/scripts/chisel/
 
 [Service]
 ExecStart=/opt/fts-lsmt/scripts/chisel/chisel-server.sh
-Restart=always
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
