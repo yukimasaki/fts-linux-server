@@ -1,7 +1,6 @@
 [Unit]
 Description=Auto launch chisel server
 After=network.target
-ConditionPathExists=/opt/fts-lsmt/scripts/chisel/
 
 [Service]
 ExecStart=chisel server --reverse --port 4343 --tls-domain bastion.example.com
