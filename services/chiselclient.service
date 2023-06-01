@@ -3,7 +3,7 @@ Description=Auto launch chisel client
 After=network.target
 
 [Service]
-ExecStart=chisel client https://bastion.example.com R:50000:localhost:8006
+ExecStart=chisel client https://bastion.example.com:4343 R:50000:localhost:8006
 Restart=on-failure
 
 [Install]
