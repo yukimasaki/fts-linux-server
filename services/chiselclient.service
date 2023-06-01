@@ -1,10 +1,9 @@
 [Unit]
 Description=Auto launch chisel client
 After=network.target
-ConditionPathExists=/opt/fts-lsmt/scripts/chisel/
 
 [Service]
-ExecStart=/opt/fts-lsmt/scripts/chisel/chisel-client.sh
+ExecStart=chisel client https://bastion.example.com R:50000:localhost:8006
 Restart=on-failure
 
 [Install]

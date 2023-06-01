@@ -4,7 +4,7 @@ After=network.target
 ConditionPathExists=/opt/fts-lsmt/scripts/chisel/
 
 [Service]
-ExecStart=/opt/fts-lsmt/scripts/chisel/chisel-server.sh
+ExecStart=chisel server --reverse --port 4343 --tls-domain bastion.example.com
 Restart=on-failure
 
 [Install]
